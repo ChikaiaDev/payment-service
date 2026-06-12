@@ -1,0 +1,56 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: payment
+  datasource:
+    url: "jdbc:mysql://${DB_HOST:localhost}:3306/${DB_NAME:payment_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true"
+    username: ${DB_USER:root}
+    password: ${DB_PASS:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,circuitbreakers
+  endpoint:
+    health:
+      show-details: always
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      notificationService:
+        registerHealthIndicator: true
+        slidingWindowSize: 5
+        minimumNumberOfCalls: 3
+        permittedNumberOfCallsInHalfOpenState: 2
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+      reportingService:
+        registerHealthIndicator: true
+        slidingWindowSize: 5
+        minimumNumberOfCalls: 3
+        permittedNumberOfCallsInHalfOpenState: 2
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+  retry:
+    instances:
+      notificationService:
+        maxAttempts: 3
+        waitDuration: 1s
+      reportingService:
+        maxAttempts: 3
+        waitDuration: 1s
+logging:
+  pattern:
+    console: "%5p [%15.15t] %m%n"

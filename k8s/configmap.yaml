@@ -1,0 +1,18 @@
+appVersion: v1
+kind: ConfigMap
+metadata:
+  name: ncba-config
+  namespace: ncba
+data:
+  DB_HOST: mysql-service
+  DB_USER: root
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ncba-secrets
+  namespace: ncba
+type: Opaque
+stringData:
+  DB_PASS: root

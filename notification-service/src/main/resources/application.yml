@@ -1,0 +1,30 @@
+
+spring:
+  application:
+    name: reporting
+  datasource:
+    url: "jdbc:mysql://${DB_HOST:localhost}:3306/${DB_NAME:notification_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true"
+    username: ${DB_USER:root}
+    password: ${DB_PASS:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+logging:
+  pattern:
+    console: "%5p [%15.15t] %m%n"
+server:
+  port: 8081
