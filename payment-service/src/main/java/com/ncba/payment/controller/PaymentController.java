@@ -48,7 +48,7 @@ public class PaymentController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<PaymentResponse>> updatePayment(
             @PathVariable Long id, @Valid @RequestBody PaymentRequest request) {
-        return ResponseEntity.ok(ApiResponse.success("Payment updated", paymentService.updatePayment(id, request)));
+    return ResponseEntity.ok(ApiResponse.success("Payment updated", paymentService.updatePayment(id, request)));
     }
 
     @DeleteMapping("/{id}")
