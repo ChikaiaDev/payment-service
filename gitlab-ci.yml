@@ -106,7 +106,7 @@ create-merge-request:
     - |
       # Create merge request via GitLab API
       curl --request POST \
-        --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
+        --header "PRIVATE-TOKEN: ${GL_TOKEN}" \
         --header "Content-Type: application/json" \
         --data "{
           \"source_branch\": \"${CI_COMMIT_REF_NAME}\",
