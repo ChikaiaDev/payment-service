@@ -4,6 +4,7 @@ import com.ncba.payment.dto.PaymentDTO.*;
 import com.ncba.payment.exception.PaymentNotFoundException;
 import com.ncba.payment.exception.PaymentProcessingException;
 import com.ncba.payment.models.*;
+import com.ncba.payment.queue.PaymentEventPublisher;
 import com.ncba.payment.repository.PaymentRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -27,11 +28,13 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final DownstreamNotifier downstreamNotifier;
+    private final PaymentEventPublisher eventPublisher;
     private final RestTemplate restTemplate;
 
-    public PaymentService(PaymentRepository paymentRepository, DownstreamNotifier downstreamNotifier, RestTemplate restTemplate) {
+    public PaymentService(PaymentRepository paymentRepository, DownstreamNotifier downstreamNotifier, PaymentEventPublisher eventPublisher, RestTemplate restTemplate) {
         this.paymentRepository = paymentRepository;
         this.downstreamNotifier = downstreamNotifier;
+        this.eventPublisher = eventPublisher;
         this.restTemplate = restTemplate;
     }
 
@@ -76,8 +79,8 @@ public class PaymentService {
     public void notifyDownstreamServices(Payment savedPayment, String correlationId) {
         MDC.put("correlationId", correlationId);
         PaymentEvent event = toEvent(savedPayment);
-        downstreamNotifier.notifyNotificationService(event);
-        downstreamNotifier.notifyReportingService(event);
+        eventPublisher.publishNotificationEvent(event);
+        eventPublisher.publishReportingEvent(event);
         MDC.clear();
     }
 
