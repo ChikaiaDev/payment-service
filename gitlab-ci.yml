@@ -1,0 +1,119 @@
+stages:
+  - build
+  - test
+  - merge-request
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  DB_HOST: localhost
+  DB_USER: root
+  DB_PASSWORD: root
+  RABBITMQ_HOST: localhost
+  RABBITMQ_USER: guest
+  RABBITMQ_PASSWORD: guest
+
+cache:
+  paths:
+    - .m2/repository  # cache maven dependencies between runs
+
+# ── BUILD ──
+build-payment-service:
+  stage: build
+  only:
+    - /^feature\/.*$/  # triggers on any feature branch
+  script:
+    - mvn clean package -pl payment-service -DskipTests -q
+
+build-notification-service:
+  stage: build
+  only:
+    - /^feature\/.*$/
+  script:
+    - mvn clean package -pl notification-service -DskipTests -q
+
+build-reporting-service:
+  stage: build
+  only:
+    - /^feature\/.*$/
+  script:
+    - mvn clean package -pl reporting-service -DskipTests -q
+
+# ── TEST ──
+test-payment-service:
+  stage: test
+  only:
+    - /^feature\/.*$/
+  services:
+    - name: mysql:8.0
+      alias: mysql
+      variables:
+        MYSQL_ROOT_PASSWORD: root
+        MYSQL_DATABASE: payment_db
+    - name: rabbitmq:3-management
+      alias: rabbitmq
+  script:
+    - mvn test -pl payment-service
+  artifacts:
+    when: always
+    reports:
+      junit: payment-service/target/surefire-reports/*.xml
+
+test-notification-service:
+  stage: test
+  only:
+    - /^feature\/.*$/
+  services:
+    - name: mysql:8.0
+      alias: mysql
+      variables:
+        MYSQL_ROOT_PASSWORD: root
+        MYSQL_DATABASE: notification_db
+    - name: rabbitmq:3-management
+      alias: rabbitmq
+  script:
+    - mvn test -pl notification-service
+  artifacts:
+    when: always
+    reports:
+      junit: notification-service/target/surefire-reports/*.xml
+
+test-reporting-service:
+  stage: test
+  only:
+    - /^feature\/.*$/
+  services:
+    - name: mysql:8.0
+      alias: mysql
+      variables:
+        MYSQL_ROOT_PASSWORD: root
+        MYSQL_DATABASE: reporting_db
+    - name: rabbitmq:3-management
+      alias: rabbitmq
+  script:
+    - mvn test -pl reporting-service
+  artifacts:
+    when: always
+    reports:
+      junit: reporting-service/target/surefire-reports/*.xml
+
+# ── MERGE REQUEST ──
+create-merge-request:
+  stage: merge-request
+  only:
+    - /^feature\/.*$/
+  when: on_success  # only runs if all build and test jobs pass
+  script:
+    - |
+      # Create merge request via GitLab API
+      curl --request POST \
+        --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
+        --header "Content-Type: application/json" \
+        --data "{
+          \"source_branch\": \"${CI_COMMIT_REF_NAME}\",
+          \"target_branch\": \"master\",
+          \"title\": \"Merge ${CI_COMMIT_REF_NAME} into master\",
+          \"description\": \"## Automated Merge Request\n\n**Branch:** ${CI_COMMIT_REF_NAME}\n**Triggered by:** ${GITLAB_USER_NAME}\n**Commit:** ${CI_COMMIT_SHA}\n\n### Commit Message\n${CI_COMMIT_MESSAGE}\n\n### Checklist\n- [x] Build passed\n- [x] All tests passed\n- [ ] Code reviewed\n- [ ] Ready to merge\",
+          \"remove_source_branch\": false,
+          \"squash\": false
+        }" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests"
