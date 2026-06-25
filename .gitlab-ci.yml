@@ -20,6 +20,7 @@ cache:
 build-payment-service:
   stage: build
   only:
+    - feature
     - /^feature\/.*$/  # triggers on any feature branch
   script:
     - mvn clean package -pl payment-service -DskipTests -q
@@ -27,6 +28,7 @@ build-payment-service:
 build-notification-service:
   stage: build
   only:
+    - feature
     - /^feature\/.*$/
   script:
     - mvn clean package -pl notification-service -DskipTests -q
@@ -34,6 +36,7 @@ build-notification-service:
 build-reporting-service:
   stage: build
   only:
+    - feature
     - /^feature\/.*$/
   script:
     - mvn clean package -pl reporting-service -DskipTests -q
@@ -42,6 +45,7 @@ build-reporting-service:
 test-payment-service:
   stage: test
   only:
+    - feature
     - /^feature\/.*$/
   services:
     - name: mysql:8.0
@@ -61,6 +65,7 @@ test-payment-service:
 test-notification-service:
   stage: test
   only:
+    - feature
     - /^feature\/.*$/
   services:
     - name: mysql:8.0
@@ -80,6 +85,7 @@ test-notification-service:
 test-reporting-service:
   stage: test
   only:
+    - feature
     - /^feature\/.*$/
   services:
     - name: mysql:8.0
@@ -100,6 +106,7 @@ test-reporting-service:
 create-merge-request:
   stage: merge-request
   only:
+    - feature
     - /^feature\/.*$/
   when: on_success  # only runs if all build and test jobs pass
   script:
