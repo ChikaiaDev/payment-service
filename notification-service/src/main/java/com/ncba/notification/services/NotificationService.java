@@ -17,7 +17,7 @@ public class NotificationService {
     }
 
     public void processEvent(PaymentEvent paymentEvent) {
-        log.info("Received Payment Event ref: {} , Event status : {} ", paymentEvent.getPaymentId(), paymentEvent.getStatus());
+        log.info("Received Payment Event ref: {} , Event status : is {} ", paymentEvent.getPaymentId(), paymentEvent.getStatus());
 
         Notification notification = new Notification();
         notification.setTransactionRef(paymentEvent.getTransactionRef());
